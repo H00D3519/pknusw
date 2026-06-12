@@ -79,6 +79,24 @@ function formatDate(timestamp: number) {
   }).format(timestamp);
 }
 
+function hasFinalConsonant(value: string) {
+  const lastChar = Array.from(value.trim()).pop();
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0);
+  if (code < 0xac00 || code > 0xd7a3) return false;
+
+  return (code - 0xac00) % 28 !== 0;
+}
+
+function getSubjectParticle(value: string) {
+  return hasFinalConsonant(value) ? "이" : "가";
+}
+
+function withSubjectParticle(value: string) {
+  return `${value}${getSubjectParticle(value)}`;
+}
+
 function getShareCodeFromPath() {
   const match = window.location.pathname.match(/^\/room\/([A-Z0-9]{5})$/i);
   return match ? match[1].toUpperCase() : "";
@@ -444,7 +462,9 @@ export default function App() {
             .reverse()
             .map(
               (expense) =>
-                `${expense.title}: ${formatCurrency(expense.amount)} / ${expense.payer} 결제`,
+                `${expense.title}: ${formatCurrency(expense.amount)} / ${withSubjectParticle(
+                  expense.payer,
+                )} 결제`,
             )
             .join("\n")
         : "입력된 지출 내역이 없습니다.";
@@ -746,7 +766,7 @@ ${expenseLines}`;
                     <div>
                       <h3>{expense.title}</h3>
                       <p>
-                        {formatCurrency(expense.amount)} · {expense.payer}가 결제
+                        {formatCurrency(expense.amount)} · {withSubjectParticle(expense.payer)} 결제
                       </p>
                     </div>
                     <button
