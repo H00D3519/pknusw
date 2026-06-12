@@ -482,15 +482,107 @@ select:focus {
 }
 
 .balance-card {
+  display: grid;
+  gap: 14px;
+}
+
+.balance-summary-button {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
   align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: auto;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.balance-summary-button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.balance-main,
+.balance-result {
+  display: grid;
+  gap: 7px;
+}
+
+.balance-name {
+  color: #f5f7fb;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.balance-main span:not(.balance-name),
+.balance-hint {
+  color: #aeb8c8;
+  font-size: 15px;
+}
+
+.balance-result {
+  justify-items: end;
 }
 
 .balance-card strong {
   text-align: right;
   white-space: nowrap;
+}
+
+.balance-detail {
+  border-top: 1px solid #2d3543;
+  padding-top: 14px;
+}
+
+.balance-formula {
+  margin: 0 0 13px;
+  padding: 11px 12px;
+  border: 1px solid #2c5161;
+  border-radius: 8px;
+  color: #d8fff6;
+  background: #102832;
+  font-weight: 800;
+}
+
+.detail-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-columns h4 {
+  margin: 0 0 8px;
+  color: #f5f7fb;
+}
+
+.detail-columns ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-columns li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  background: #0f1218;
+}
+
+.detail-columns li strong {
+  text-align: right;
+}
+
+.detail-empty {
+  margin: 0;
+  color: #8d98aa;
 }
 
 .positive {
@@ -562,7 +654,7 @@ select:focus {
   .participant-header,
   .section-title-row,
   .expense-topline,
-  .balance-card {
+  .balance-summary-button {
     align-items: stretch;
     flex-direction: column;
   }
@@ -583,5 +675,13 @@ select:focus {
 
   .balance-card strong {
     text-align: left;
+  }
+
+  .balance-result {
+    justify-items: start;
+  }
+
+  .detail-columns {
+    grid-template-columns: 1fr;
   }
 }
