@@ -242,6 +242,7 @@ export default function App() {
   const [joinCode, setJoinCode] = useState("");
   const [homeError, setHomeError] = useState("");
   const [joinError, setJoinError] = useState("");
+  const [expandedBalanceMember, setExpandedBalanceMember] = useState<string | null>(null);
 
   const [expenseTitle, setExpenseTitle] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
@@ -300,6 +301,7 @@ export default function App() {
       const validCurrent = current.filter((member) => room.members.includes(member));
       return validCurrent.length > 0 ? validCurrent : room.members;
     });
+    setExpandedBalanceMember((current) => (current && room.members.includes(current) ? current : null));
   }, [room]);
 
   function showToast(message: string) {
@@ -503,6 +505,25 @@ ${expenseLines}`;
         ? current.filter((participant) => participant !== member)
         : [...current, member],
     );
+  }
+
+  function getMemberSettlementDetails(member: string) {
+    const paidItems = expenses
+      .filter((expense) => expense.payer === member)
+      .map((expense) => ({
+        id: expense.id,
+        title: expense.title,
+        amount: expense.amount,
+      }));
+    const owedItems = expenses
+      .map((expense) => ({
+        id: expense.id,
+        title: expense.title,
+        amount: calculateExpenseShares(expense)[member] ?? 0,
+      }))
+      .filter((item) => item.amount > 0);
+
+    return { paidItems, owedItems };
   }
 
   if (!shareCode) {
@@ -795,24 +816,89 @@ ${expenseLines}`;
           <h2>개인별 정산 요약</h2>
           <div className="balance-list">
             {balances.map((balance) => (
-              <div className="balance-card" key={balance.member}>
-                <div>
-                  <h3>{balance.member}</h3>
-                  <p>결제 {formatCurrency(balance.paid)}</p>
-                  <p>부담 {formatCurrency(balance.owed)}</p>
-                </div>
-                <strong
-                  className={
-                    balance.balance > 0
-                      ? "positive"
-                      : balance.balance < 0
-                        ? "negative"
-                        : "settled"
+              <article
+                className={`balance-card ${
+                  expandedBalanceMember === balance.member ? "expanded" : ""
+                }`}
+                key={balance.member}
+              >
+                <button
+                  className="balance-summary-button"
+                  type="button"
+                  onClick={() =>
+                    setExpandedBalanceMember((current) =>
+                      current === balance.member ? null : balance.member,
+                    )
                   }
+                  aria-expanded={expandedBalanceMember === balance.member}
+                  aria-label={`${balance.member} 정산 계산 근거 보기`}
                 >
-                  {getBalanceText(balance.balance)}
-                </strong>
-              </div>
+                  <span className="balance-main">
+                    <span className="balance-name">{balance.member}</span>
+                    <span>결제 {formatCurrency(balance.paid)}</span>
+                    <span>부담 {formatCurrency(balance.owed)}</span>
+                  </span>
+                  <span className="balance-result">
+                    <strong
+                      className={
+                        balance.balance > 0
+                          ? "positive"
+                          : balance.balance < 0
+                            ? "negative"
+                            : "settled"
+                      }
+                    >
+                      {getBalanceText(balance.balance)}
+                    </strong>
+                    <span className="balance-hint">
+                      {expandedBalanceMember === balance.member
+                        ? "계산 근거 닫기"
+                        : "계산 근거 보기"}
+                    </span>
+                  </span>
+                </button>
+
+                {expandedBalanceMember === balance.member && (
+                  <div className="balance-detail">
+                    <p className="balance-formula">
+                      결제한 금액 {formatCurrency(balance.paid)} - 부담할 금액{" "}
+                      {formatCurrency(balance.owed)} = {getBalanceText(balance.balance)}
+                    </p>
+                    <div className="detail-columns">
+                      <div>
+                        <h4>결제한 항목</h4>
+                        {getMemberSettlementDetails(balance.member).paidItems.length > 0 ? (
+                          <ul>
+                            {getMemberSettlementDetails(balance.member).paidItems.map((item) => (
+                              <li key={item.id}>
+                                <span>{item.title}</span>
+                                <strong>{formatCurrency(item.amount)}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="detail-empty">결제한 항목이 없습니다.</p>
+                        )}
+                      </div>
+                      <div>
+                        <h4>부담한 항목</h4>
+                        {getMemberSettlementDetails(balance.member).owedItems.length > 0 ? (
+                          <ul>
+                            {getMemberSettlementDetails(balance.member).owedItems.map((item) => (
+                              <li key={item.id}>
+                                <span>{item.title}</span>
+                                <strong>{formatCurrency(item.amount)}</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="detail-empty">부담한 항목이 없습니다.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
             ))}
           </div>
         </article>
